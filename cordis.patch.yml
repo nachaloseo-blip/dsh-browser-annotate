@@ -1,0 +1,7 @@
+# dsh-browser-annotate bundle layer. The row name must stay the full package
+# identifier: client-modules resolves the browser bundle by the loader entry
+# name, so a shortened name leaves the UI half out of window.__DSH_BOOT__.
+- insert:
+    - id: browser-annotate
+      name: 'dsh-browser-annotate'
+      config: {}

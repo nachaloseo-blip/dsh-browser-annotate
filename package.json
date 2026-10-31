@@ -1,0 +1,57 @@
+{
+  "name": "dsh-browser-annotate",
+  "version": "0.1.0",
+  "description": "Pick elements inside the Harness side-panel Browser, comment on them, and send the annotations to the agent.",
+  "license": "MIT",
+  "author": "nachaloseo-blip",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "annotate",
+    "annotation",
+    "browser",
+    "element-picker",
+    "visual-feedback"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nachaloseo-blip/dsh-browser-annotate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nachaloseo-blip/dsh-browser-annotate/issues"
+  },
+  "homepage": "https://github.com/nachaloseo-blip/dsh-browser-annotate#readme",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  }
+}

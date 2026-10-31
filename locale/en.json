@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Browser Annotate",
+    "description": "Pick elements inside the Harness Browser panel, write a comment on each one, and let the agent read the annotations and the current page."
+  }
+}
