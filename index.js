@@ -17,12 +17,13 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { BrowserAgentHost } from './lib/host.js'
 
 /** Stable Loader identity; equals the package name so the Client bundle resolves. */
 export const name = 'dsh-browser-annotate'
 
 /** Services this plugin needs before it can activate. */
-export const inject = ['tools', 'connection']
+export const inject = ['tools', 'connection', 'webServer']
 
 /** Exact Fetch route on the shared `/api` channel the Client half posts to. */
 const ROUTE_PATH = '/api/browser-annotate'
@@ -169,6 +170,16 @@ function renderTranscriptNotice(items, page) {
  * @param ctx - Host context providing `tools` and `connection`.
  */
 export function apply(ctx) {
+  const webServer = ctx.webServer ?? ctx.get('webServer')
+  const browser = new BrowserAgentHost(ctx, webServer)
+  ctx.effect(() => () => browser.dispose(), 'browser-agent: dispose')
+  if (webServer !== undefined) {
+    for (const [, routePath, handler] of browser.routes()) {
+      ctx.effect(() => webServer.register({ kind: 'exact', path: routePath, handler }), `browser-agent: ${routePath}`)
+    }
+  }
+  ctx.effect(() => ctx.tools.register(browser.toolDefinition()), 'browser-agent: tool')
+
   const store = {
     page: undefined,
     annotations: [],
@@ -259,7 +270,8 @@ export function apply(ctx) {
       'Read the element annotations the user marked in the Harness side-panel Browser, or clear them. '
       + 'Each annotation carries the CSS selector, the tag, the element text, the viewport rect, the page URL '
       + 'and the comment the user typed about that element. Annotations also arrive automatically with the '
-      + 'user message as an attached context snapshot; call this when you need them again later.',
+      + 'user message as an attached context snapshot; call this when you need them again later. '
+      + 'To act on a marked element, pass its CSS selector to the `browser` tool (click/type accept `selector`).',
     parameters: {
       type: 'object',
       additionalProperties: false,
@@ -334,7 +346,8 @@ export function apply(ctx) {
     description:
       'Read what the user currently has open in the Harness side-panel Browser: the page URL, its title and '
       + 'the visible text. Call it when the user says "this page", "here", or asks about the site shown in the '
-      + 'browser panel. The snapshot is the last one the browser panel reported.',
+      + 'browser panel. The snapshot is the last one the browser panel reported. '
+      + 'To navigate or interact, use the `browser` tool instead.',
     parameters: { type: 'object', additionalProperties: false, properties: {} },
     output: {
       schema: {

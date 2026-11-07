@@ -1,7 +1,7 @@
 {
   "name": "dsh-browser-annotate",
-  "version": "0.1.0",
-  "description": "Pick elements inside the Harness side-panel Browser, comment on them, and send the annotations to the agent.",
+  "version": "0.2.0",
+  "description": "Control the Harness side-panel Browser from the agent, and annotate its elements with comments delivered to the chat.",
   "license": "MIT",
   "author": "nachaloseo-blip",
   "type": "module",
@@ -21,7 +21,8 @@
     "locale/*.json",
     "icon.svg",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "lib/*.js"
   ],
   "keywords": [
     "dsh",
@@ -32,7 +33,9 @@
     "annotation",
     "browser",
     "element-picker",
-    "visual-feedback"
+    "visual-feedback",
+    "browser-control",
+    "automation"
   ],
   "repository": {
     "type": "git",
@@ -50,7 +53,9 @@
       "platform": "web",
       "immediately": true,
       "inject": [
-        "@deepseek-ai/dsh-client-ui-conversation"
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-sidebar-browser"
       ]
     }
   }

@@ -1,6 +1,6 @@
 # dsh-browser-annotate
 
-**Point at an element in the Harness browser panel, write a comment, and let the agent read it.**
+**Control the Harness side-panel Browser from the agent, and point at elements with comments.**
 
 A DeepSeek Harness plugin that turns the side-panel Browser into a selection surface: right-click any
 element (or press `Alt+A` and click), leave a comment, and the annotation is delivered to the agent
@@ -63,6 +63,7 @@ together with your next message — selector, tag, element text and your wording
 
 | Инструмент | Что делает |
 |---|---|
+| `browser` | Управление панелью: `open`, `snapshot`, `click`, `type`, `select`, `press`, `navigate`, `scroll`, `wait`, `screenshot`, `tabs`, `close`, `eval`, `annotate`. |
 | `browser_annotations` | Список текущих аннотаций: селектор, тег, текст элемента, координаты, URL, комментарий. `action: "clear"` очищает. |
 | `browser_page` | Что открыто в панели «Браузер»: URL, заголовок и видимый текст страницы. |
 
