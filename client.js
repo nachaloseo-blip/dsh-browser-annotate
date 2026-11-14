@@ -1705,6 +1705,20 @@ window.__ModuleLoader__.load({
               title: 'Удалить все аннотации',
             }, 'очистить')
             : null,
+          state.count > 0
+            ? h('button', {
+              type: 'button',
+              style: { ...token.button, ...token.activeButton },
+              title: 'Отправить аннотации агенту без текста сообщения',
+              onClick: () => {
+                const keyboard = props.keyboard
+                if (keyboard === undefined || typeof keyboard.submit !== 'function') return
+                window.setTimeout(() => {
+                  keyboard.submit('queue', 'annotate', true)
+                }, 900)
+              },
+            }, `Отправить (${String(state.count)})`)
+            : null,
           ),
           state.status !== '' ? h('span', { style: token.status }, state.status) : null,
         ),
@@ -1716,12 +1730,9 @@ window.__ModuleLoader__.load({
       inject: ['slots', 'sidebarRight'],
       apply(ctx) {
         BrowserBridge.apply(ctx)
-        function Host() {
-          // The controls live inside the page now (the toolbar above the page
-          // content); this entry only keeps the poll that syncs the annotations
-          // and the page snapshot to the Host.
-          useAnnotate(ctx)
-          return null
+        function Host(props) {
+          const state = useAnnotate(ctx)
+          return h(Dock, { state, keyboard: props ? props.keyboard : undefined })
         }
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
