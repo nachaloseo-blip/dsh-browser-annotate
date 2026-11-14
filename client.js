@@ -37,9 +37,10 @@ const INJECT_SCRIPT = String.raw`(function () {
     '.card .row{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}',
     '.card button{border:1px solid #d5dae2;background:#f5f7fa;color:#111;border-radius:6px;padding:4px 10px;font:12px system-ui,sans-serif;cursor:pointer}',
     '.card button.go{background:#4c7dff;border-color:#4c7dff;color:#fff}',
-    '.bar{position:fixed;top:8px;right:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:calc(100vw - 16px);padding:5px 7px;border-radius:10px;background:rgba(17,24,39,.88);color:#fff;font:12px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;pointer-events:auto;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:move;touch-action:none}',
+    '.bar{position:fixed;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:calc(100vw - 20px);padding:5px 7px;border-radius:10px;background:rgba(17,24,39,.88);color:#fff;font:12px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;pointer-events:auto;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:move;touch-action:none}',
     '.bar button{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;font:12px/1 system-ui,sans-serif;cursor:pointer}',
     '.bar button.on{background:#4c7dff;border-color:#4c7dff}',
+    '.bar button.go{background:#4c7dff;border-color:#4c7dff;font-weight:600}',
     '.bar .count{min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#4c7dff;color:#fff;font:600 10px/16px system-ui,sans-serif;text-align:center}',
     '.bar .link{border:0;background:transparent;color:#c7d2fe;text-decoration:underline;padding:0 2px;height:auto}',
     '.bar .chips{display:flex;gap:6px;flex-wrap:wrap;max-width:100%}',
@@ -1774,8 +1775,9 @@ window.__ModuleLoader__.load({
               keyboard.submit('queue', 'annotate', true)
             }
           }
-          const state = useAnnotate(ctx, send)
-          return h(Dock, { state, keyboard })
+          useAnnotate(ctx, send)
+          // All controls live in the page toolbar: the Harness composer stays untouched.
+          return null
         }
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
