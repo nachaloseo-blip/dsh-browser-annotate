@@ -1771,8 +1771,16 @@ window.__ModuleLoader__.load({
         function Host(props) {
           const keyboard = props ? props.keyboard : undefined
           const send = () => {
-            if (keyboard !== undefined && typeof keyboard.submit === 'function') {
-              keyboard.submit('queue', 'annotate', true)
+            if (keyboard === undefined) return
+            try {
+              const draft = typeof keyboard.snapshot?.draft === 'string' ? keyboard.snapshot.draft : ''
+              if (draft.trim() === '' && typeof keyboard.setDraft === 'function') {
+                // A zero-width space makes the draft non-empty without showing text.
+                keyboard.setDraft('\u200b')
+              }
+              if (typeof keyboard.submit === 'function') keyboard.submit('queue', 'annotate')
+            } catch {
+              /* the composer may be unavailable */
             }
           }
           useAnnotate(ctx, send)
