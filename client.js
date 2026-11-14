@@ -37,7 +37,7 @@ const INJECT_SCRIPT = String.raw`(function () {
     '.card .row{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}',
     '.card button{border:1px solid #d5dae2;background:#f5f7fa;color:#111;border-radius:6px;padding:4px 10px;font:12px system-ui,sans-serif;cursor:pointer}',
     '.card button.go{background:#4c7dff;border-color:#4c7dff;color:#fff}',
-    '.bar{position:fixed;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:calc(100vw - 20px);padding:5px 7px;border-radius:10px;background:rgba(17,24,39,.88);color:#fff;font:12px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;pointer-events:auto;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:move;touch-action:none}',
+    '.bar{position:fixed;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:calc(100vw - 20px);padding:5px 7px;border-radius:10px;background:rgba(17,24,39,.88);color:#fff;font:12px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;pointer-events:auto;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:default}',
     '.bar button{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;font:12px/1 system-ui,sans-serif;cursor:pointer}',
     '.bar button.on{background:#4c7dff;border-color:#4c7dff}',
     '.bar button.go{background:#4c7dff;border-color:#4c7dff;font-weight:600}',
@@ -416,6 +416,9 @@ const INJECT_SCRIPT = String.raw`(function () {
     barPos = null;
   }
 
+  // The toolbar stays pinned: dragging it inside the guest page could be
+  // mistaken for a page gesture and change the page zoom.
+  barPos = null;
   function placeBar() {
     if (!barPos || typeof barPos.left !== 'number' || typeof barPos.top !== 'number') return;
     bar.style.left = barPos.left + 'px';
@@ -424,31 +427,6 @@ const INJECT_SCRIPT = String.raw`(function () {
   }
 
   var dragState = null;
-  bar.addEventListener('pointerdown', function (event) {
-    if (event.target && typeof event.target.closest === 'function' && event.target.closest('button')) return;
-    var rect = bar.getBoundingClientRect();
-    dragState = { dx: event.clientX - rect.left, dy: event.clientY - rect.top };
-    try { bar.setPointerCapture(event.pointerId); } catch (error) {}
-    event.preventDefault();
-    event.stopPropagation();
-  });
-  bar.addEventListener('pointermove', function (event) {
-    if (dragState === null) return;
-    var rect = bar.getBoundingClientRect();
-    var left = Math.max(4, Math.min(window.innerWidth - rect.width - 4, event.clientX - dragState.dx));
-    var top = Math.max(4, Math.min(window.innerHeight - rect.height - 4, event.clientY - dragState.dy));
-    bar.style.left = left + 'px';
-    bar.style.top = top + 'px';
-    bar.style.right = 'auto';
-  });
-  bar.addEventListener('pointerup', function () {
-    if (dragState === null) return;
-    dragState = null;
-    var rect = bar.getBoundingClientRect();
-    try {
-      window.localStorage.setItem('dsh-annotate:bar', JSON.stringify({ left: Math.round(rect.left), top: Math.round(rect.top) }));
-    } catch (error) {}
-  });
   placeBar();
 
   function setMode(next) {
