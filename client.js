@@ -1749,11 +1749,21 @@ window.__ModuleLoader__.load({
         function Host(props) {
           const keyboard = props ? props.keyboard : undefined
           const send = () => {
+            try {
+              const conversation = ctx.conversation ?? (typeof ctx.get === 'function' ? ctx.get('conversation') : undefined)
+              if (conversation !== undefined && typeof conversation.send === 'function') {
+                // The service targets the scoped Session and sends through the
+                // normal prompt pipeline, so annotations attach on the next step.
+                void conversation.send('\u200b').catch(() => {})
+                return
+              }
+            } catch {
+              /* fall through to the composer shell */
+            }
             if (keyboard === undefined) return
             try {
               const draft = typeof keyboard.snapshot?.draft === 'string' ? keyboard.snapshot.draft : ''
               if (draft.trim() === '' && typeof keyboard.setDraft === 'function') {
-                // A zero-width space makes the draft non-empty without showing text.
                 keyboard.setDraft('\u200b')
               }
               if (typeof keyboard.submit === 'function') keyboard.submit('queue', 'annotate')
