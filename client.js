@@ -1414,6 +1414,20 @@ window.__ModuleLoader__.load({
     }
 
     /** Shared React state so the row and its handlers stay in sync. */
+    /** Shared annotation count for the compact composer badge. */
+    const annotationBus = {
+      count: 0,
+      listeners: new Set(),
+      publish(value) {
+        annotationBus.count = value
+        for (const listener of annotationBus.listeners) listener()
+      },
+      subscribe(listener) {
+        annotationBus.listeners.add(listener)
+        return () => annotationBus.listeners.delete(listener)
+      },
+    }
+
     function useAnnotate(ctx, send) {
       const sendRef = React.useRef(send)
       sendRef.current = send
@@ -1500,6 +1514,7 @@ window.__ModuleLoader__.load({
                   label: item.text === '' ? item.selector : item.text,
                   comment: item.comment === '' ? '' : item.comment,
                 })))
+                annotationBus.publish(list.length)
                 setStatus(list.length > 0 ? 'Уйдёт со следующим сообщением' : 'Кликните по элементу в браузере')
                 await post({
                   page: {
@@ -1524,6 +1539,7 @@ window.__ModuleLoader__.load({
                 lastRef.current = ''
                 setCount(0)
                 setItems([])
+                annotationBus.publish(0)
                 setStatus('Отправлено — метки убраны')
                 await sendToHost({ action: 'clear' })
               }
@@ -1563,6 +1579,7 @@ window.__ModuleLoader__.load({
         lastRef.current = ''
         setCount(0)
         setItems([])
+        annotationBus.publish(0)
         await post({ annotations: [] })
       }, [post])
 
@@ -1741,6 +1758,23 @@ window.__ModuleLoader__.load({
         state.count > 0 ? h('div', { style: token.chipList }, chips) : null)
     }
 
+    /** Compact indicator in the composer row, next to the microphone. */
+    function AnnotationBadge() {
+      const count = React.useSyncExternalStore(annotationBus.subscribe, () => annotationBus.count)
+      if (count === 0) return null
+      return h('button', {
+        type: 'button',
+        title: 'Аннотации со страницы — нажмите, чтобы включить выбор элементов',
+        style: { ...token.button, borderColor: '#4c7dff', color: '#4c7dff' },
+        onClick: async () => {
+          const webview = findWebview()
+          if (webview === null) return
+          await ensureOverlay(webview)
+          await evaluate(webview, 'window.__dshAnnotate && window.__dshAnnotate.setMode(true), "on"')
+        },
+      }, `📍 ${String(count)}`)
+    }
+
     return {
       name: 'dsh-browser-annotate',
       inject: ['slots', 'sidebarRight'],
@@ -1780,6 +1814,11 @@ window.__ModuleLoader__.load({
           id: 'browser-annotate',
           order: 40,
         }, Host))
+        ctx.slots.inject('conversation.input.right', () => ctx.slots.register({
+          name: 'conversation.input.right',
+          id: 'browser-annotate-badge',
+          order: 60,
+        }, AnnotationBadge))
       },
     }
   },
