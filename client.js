@@ -18,6 +18,7 @@ const INJECT_SCRIPT = String.raw`(function () {
   var mode = false;
   var items = [];
   var cardOpen = false;
+  var sendRequested = false;
   var pendingElement = null;
 
   var root = document.createElement('div');
@@ -61,10 +62,15 @@ const INJECT_SCRIPT = String.raw`(function () {
   clearBtn.type = 'button';
   clearBtn.className = 'link';
   clearBtn.textContent = 'очистить';
+  var sendBtn = document.createElement('button');
+  sendBtn.type = 'button';
+  sendBtn.className = 'go';
+  sendBtn.textContent = 'Отправить';
   var chipRow = document.createElement('div');
   chipRow.className = 'chips';
   bar.appendChild(toggleBtn);
   bar.appendChild(countBadge);
+  bar.appendChild(sendBtn);
   bar.appendChild(clearBtn);
   bar.appendChild(chipRow);
   shadow.appendChild(bar);
@@ -355,6 +361,13 @@ const INJECT_SCRIPT = String.raw`(function () {
     event.stopPropagation();
     clear();
   });
+  sendBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (items.length === 0) return;
+    sendRequested = true;
+    renderBar();
+  });
 
   /** Repaint the in-page toolbar: toggle state, counter, and the chip list. */
   function renderBar() {
@@ -362,6 +375,7 @@ const INJECT_SCRIPT = String.raw`(function () {
     toggleBtn.className = mode ? 'on' : '';
     countBadge.textContent = String(items.length);
     countBadge.style.display = items.length > 0 ? '' : 'none';
+    sendBtn.style.display = items.length > 0 ? '' : 'none';
     clearBtn.style.display = items.length > 0 ? '' : 'none';
     while (chipRow.firstChild) chipRow.removeChild(chipRow.firstChild);
     items.forEach(function (item, index) {
@@ -532,12 +546,19 @@ const INJECT_SCRIPT = String.raw`(function () {
     delete window.__dshAnnotate;
   }
 
+  function takeSend() {
+    var value = sendRequested;
+    sendRequested = false;
+    return value;
+  }
+
   window.__dshAnnotate = {
     version: 7,
     setMode: setMode,
     snapshot: snapshot,
     remove: remove,
     clear: clear,
+    takeSend: takeSend,
     isActive: function () { return mode; },
     destroy: destroy
   };
@@ -1414,7 +1435,9 @@ window.__ModuleLoader__.load({
     }
 
     /** Shared React state so the row and its handlers stay in sync. */
-    function useAnnotate(ctx) {
+    function useAnnotate(ctx, send) {
+      const sendRef = React.useRef(send)
+      sendRef.current = send
       const [active, setActive] = React.useState(false)
       const [count, setCount] = React.useState(0)
       const [items, setItems] = React.useState([])
@@ -1470,6 +1493,20 @@ window.__ModuleLoader__.load({
                 return
               }
               const list = Array.isArray(snapshot.annotations) ? snapshot.annotations : []
+              const requested = typeof sendRef.current === 'function'
+                ? await evaluate(webview, 'window.__dshAnnotate && window.__dshAnnotate.takeSend ? window.__dshAnnotate.takeSend() : false')
+                : false
+              if (requested === true && list.length > 0) {
+                await post({
+                  page: {
+                    url: typeof snapshot.url === 'string' && snapshot.url !== '' ? snapshot.url : identity.url,
+                    title: typeof snapshot.title === 'string' && snapshot.title !== '' ? snapshot.title : identity.title,
+                    text: typeof snapshot.text === 'string' ? snapshot.text : '',
+                  },
+                  annotations: list,
+                })
+                if (typeof sendRef.current === 'function') sendRef.current()
+              }
               const hash = [
                 typeof snapshot.url === 'string' ? snapshot.url : identity.url,
                 typeof snapshot.title === 'string' ? snapshot.title : identity.title,
@@ -1731,8 +1768,14 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         BrowserBridge.apply(ctx)
         function Host(props) {
-          const state = useAnnotate(ctx)
-          return h(Dock, { state, keyboard: props ? props.keyboard : undefined })
+          const keyboard = props ? props.keyboard : undefined
+          const send = () => {
+            if (keyboard !== undefined && typeof keyboard.submit === 'function') {
+              keyboard.submit('queue', 'annotate', true)
+            }
+          }
+          const state = useAnnotate(ctx, send)
+          return h(Dock, { state, keyboard })
         }
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
